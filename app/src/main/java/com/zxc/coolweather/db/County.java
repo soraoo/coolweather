@@ -6,10 +6,12 @@ package com.zxc.coolweather.db;
  * 时间 2017/6/2
  */
 
+import org.litepal.crud.DataSupport;
+
 /**
  * 县
  */
-public class County {
+public class County extends DataSupport {
 
     /**
      * id
@@ -22,7 +24,7 @@ public class County {
     /**
      * 天气id
      */
-    private int weatherId;
+    private String weatherId;
     /**
      * 所属市的id
      */
@@ -44,11 +46,11 @@ public class County {
         this.name = name;
     }
 
-    public int getWeatherId() {
+    public String getWeatherId() {
         return weatherId;
     }
 
-    public void setWeatherId(int weatherId) {
+    public void setWeatherId(String weatherId) {
         this.weatherId = weatherId;
     }
 
