@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<litepal>
+
+    <!--数据库名称-->
+    <dbname value="CoolWeather"/>
+
+    <!--数据库版本号-->
+    <version value="1"/>
+
+    <!--表配置-->
+    <list>
+        <mapping class="com.zxc.coolweather.db.Province"/>
+        <mapping class="com.zxc.coolweather.db.City"/>
+        <mapping class="com.zxc.coolweather.db.County"/>
+    </list>
+
+</litepal>
