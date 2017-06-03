@@ -1,17 +1,21 @@
 package com.zxc.coolweather;
 
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.zxc.coolweather.gson.Forecast;
 import com.zxc.coolweather.gson.Weather;
 import com.zxc.coolweather.util.HttpUtil;
@@ -26,6 +30,8 @@ import okhttp3.Callback;
 import okhttp3.Response;
 
 public class WeatherActivity extends AppCompatActivity {
+
+    private ImageView bgImg;
 
     private ScrollView weatherScroll;
 
@@ -52,11 +58,25 @@ public class WeatherActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //背景图覆盖状态栏(5.0以上支持)
+        if (Build.VERSION.SDK_INT >= 21) {
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+        }
+
         setContentView(R.layout.activity_weather);
 
         //初始化各控件
         initUI();
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        String bgPic = pref.getString("bg_pic", null);
+        if (bgPic != null) {
+            Glide.with(this).load(bgPic).into(bgImg);
+        } else {
+            loadBgPic();
+        }
         String weatherString = pref.getString("weather", null);
         if (weatherString != null) {
             //有缓存时直接解析天气数据
@@ -109,6 +129,7 @@ public class WeatherActivity extends AppCompatActivity {
                 });
             }
         });
+        loadBgPic();
     }
 
     /**
@@ -140,7 +161,7 @@ public class WeatherActivity extends AppCompatActivity {
             forecastLayout.addView(view);
         }
 
-        if(weather.aqi!=null){
+        if (weather.aqi != null) {
             aqiAqiText.setText(weather.aqi.city.aqi);
             aqiPm25Text.setText(weather.aqi.city.pm25);
         }
@@ -154,10 +175,39 @@ public class WeatherActivity extends AppCompatActivity {
         weatherScroll.setVisibility(View.VISIBLE);
     }
 
+
+    /**
+     * 加载背景图片
+     */
+    private void loadBgPic() {
+        String requestBgPic = "http://guolin.tech/api/bing_pic";
+        HttpUtil.sendOkHttpRequest(requestBgPic, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                final String pic = response.body().string();
+                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
+                editor.putString("bg_pic", pic);
+                editor.apply();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Glide.with(WeatherActivity.this).load(pic).into(bgImg);
+                    }
+                });
+            }
+        });
+    }
+
     /**
      * 初始化控件
      */
     private void initUI() {
+        bgImg = (ImageView) findViewById(R.id.img_bg);
         weatherScroll = (ScrollView) findViewById(R.id.scroll_weather);
         titleCityText = (TextView) findViewById(R.id.text_title_city);
         titleUpdateTimeText = (TextView) findViewById(R.id.text_title_update_time);
