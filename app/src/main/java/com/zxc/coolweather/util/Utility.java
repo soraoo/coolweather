@@ -7,10 +7,13 @@ package com.zxc.coolweather.util;
  */
 
 import android.text.TextUtils;
+import android.util.Log;
 
+import com.google.gson.Gson;
 import com.zxc.coolweather.db.City;
 import com.zxc.coolweather.db.County;
 import com.zxc.coolweather.db.Province;
+import com.zxc.coolweather.gson.Weather;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -50,7 +53,7 @@ public class Utility {
     /**
      * 解析和处理服务器返回的市级数据
      *
-     * @param response     返回的数据
+     * @param response   返回的数据
      * @param provinceId 所属省的id
      * @return 是否成功
      */
@@ -79,7 +82,7 @@ public class Utility {
      * 解析和处理服务器返回的县级数据
      *
      * @param response 返回的数据
-     * @param cityId 所属市的id
+     * @param cityId   所属市的id
      * @return 是否成功
      */
     public static boolean handleCountyResponse(String response, int cityId) {
@@ -101,5 +104,23 @@ public class Utility {
             }
         }
         return false;
+    }
+
+    /**
+     * 将返回的JSON数据解析成Weather实体类
+     *
+     * @param response 返回的数据 、
+     * @return Weather实例
+     */
+    public static Weather handleWeatherResponse(String response) {
+        try {
+            JSONObject jsonObj = new JSONObject(response);
+            JSONArray jsonArray = jsonObj.getJSONArray("HeWeather");
+            String weatherContent = jsonArray.getJSONObject(0).toString();
+            return new Gson().fromJson(weatherContent, Weather.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
