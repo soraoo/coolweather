@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -33,6 +34,8 @@ public class WeatherActivity extends AppCompatActivity {
 
     private ImageView bgImg;
 
+    private SwipeRefreshLayout weatherRefresh;
+
     private ScrollView weatherScroll;
 
     private TextView titleCityText;
@@ -55,6 +58,8 @@ public class WeatherActivity extends AppCompatActivity {
 
     private TextView suggestionSportText;
 
+    private String weatherId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,6 +75,7 @@ public class WeatherActivity extends AppCompatActivity {
 
         //初始化各控件
         initUI();
+        weatherRefresh.setColorSchemeResources(R.color.colorPrimary);
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
         String bgPic = pref.getString("bg_pic", null);
         if (bgPic != null) {
@@ -81,13 +87,20 @@ public class WeatherActivity extends AppCompatActivity {
         if (weatherString != null) {
             //有缓存时直接解析天气数据
             Weather weather = Utility.handleWeatherResponse(weatherString);
+            weatherId = weather.basic.weatherId;
             showWeatherInfo(weather);
         } else {
             //无缓存时去服务器查询天气
-            String weatherId = getIntent().getStringExtra("weather_id");
+            weatherId = getIntent().getStringExtra("weather_id");
             weatherScroll.setVisibility(View.INVISIBLE);
             requestWeather(weatherId);
         }
+        weatherRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                requestWeather(weatherId);
+            }
+        });
     }
 
     /**
@@ -106,6 +119,7 @@ public class WeatherActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_SHORT).show();
+                        weatherRefresh.setRefreshing(false);
                     }
                 });
             }
@@ -125,6 +139,7 @@ public class WeatherActivity extends AppCompatActivity {
                         } else {
                             Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_SHORT).show();
                         }
+                        weatherRefresh.setRefreshing(false);
                     }
                 });
             }
@@ -208,6 +223,7 @@ public class WeatherActivity extends AppCompatActivity {
      */
     private void initUI() {
         bgImg = (ImageView) findViewById(R.id.img_bg);
+        weatherRefresh = (SwipeRefreshLayout) findViewById(R.id.refresh_weather);
         weatherScroll = (ScrollView) findViewById(R.id.scroll_weather);
         titleCityText = (TextView) findViewById(R.id.text_title_city);
         titleUpdateTimeText = (TextView) findViewById(R.id.text_title_update_time);
